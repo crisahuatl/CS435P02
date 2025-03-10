@@ -153,26 +153,6 @@ enum tokenType scan() {
     return SCAN_EOF;
 }
 
-/* global variable */
-int currentToken;
-int numberOfErrors = 0;
-
-int main(int argc, char* arv[])
-{
-    if (parse() == 0) printf("String Accepted");
-    else {
-        printf("Input contains syntax errors.");
-    }
-
-
-    return 0;
-}
-int parse() {
-    scan(); 
-    E();
-    if (currentToken != SCAN_EOF) syntax_error("Unexpected end of input");
-    return numberOfErrors;
-}
 void E() {
     T();
     while (currentToken == PLUS) {
@@ -203,3 +183,40 @@ void F() {
     }
     else syntax_error("Missing Expression symbol");
 }
+
+/* global variable */
+int currentToken;
+int numberOfErrors = 0;
+
+int main(int argc, char* arv[])
+{
+    if (parse() == 0) printf("String Accepted");
+    else {
+        printf("Input contains syntax errors.");
+    }
+
+    /*
+    statement(currentToken){
+    //3 cases: ID, READ, WRITE
+        ID(){
+            if (nextToken == ASSIGNMENT){
+                EXPRESSION(nextToken)
+                if (nextToken != SEMICOLON); //if true continue 
+            }
+        }
+    }
+    
+    */
+
+
+
+    return 0;
+}
+
+int parse() {
+    scan(); 
+    E();
+    if (currentToken != SCAN_EOF) syntax_error("Unexpected end of input");
+    return numberOfErrors;
+}
+
