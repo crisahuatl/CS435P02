@@ -1,222 +1,222 @@
-// Cristopher Ahuatl
-// CS435-01 SPR 2025 
-// Project 01: Simple Scanner for PL1
-//      Use command-line parameters to access the source file. Read it and output all tokens on seperate lines. 
-//      FOR LEXEMES AND IDENTIFIERS: Also output the lexeme
-//      **Emphasis on test cases
-
-//File path in fuckass VM: C:\Users\e0778856\source\repos\CS435\CS435P02Ahuatl\x64\Debug
-
 #include <stdio.h>  //for c I/O
 #include <stdlib.h> //for exit()
-#include <ctype.h>  //for isalpha(), isalnum(), ...
 #include <string.h> //for strcmp
-//Added the tokenType and mnemonic SIZE_ERROR to return if a lexeme is too large to avoid overflow
-enum tokenType {
-    READ, WRITE, ID, NUMBER, LPAREN, RPAREN, SEMICOLON, COMMA, ASSIGN, PLUS, MINUS, TIMES, DIV, SCAN_EOF, SIZE_ERROR
-};
+#include "scanner.h"
 
-const char* mnemonic[] = { "READ", "WRITE", "ID", "NUMBER", "LPAREN", "RPAREN", "SEMICOLON", "COMMA", "ASSIGN", "PLUS", "MINUS", "TIMES", "DIV", "SCAN_EOF", "SIZE_ERROR" };
-
-void lexical_error(char ch) {
-    fprintf(stderr, "Lexical error. Unexpected character: %c  \n", ch);
+//unsigned numErrs = 0;
+/*========= PROVIDED FUNCTIONS ==========*/
+void parse_error(char* errMsg, char* lexeme) {
+    //extern unsigned numErrs; //for future if error recovery used
+    //numErrs++;
+    fprintf(stderr, "%s: %s\n", errMsg, lexeme);
 }
 
-char lexeme[256] = { '\0' };    //this means our valid range is 0 - 255
-unsigned int lexLen = 0;
-FILE* src;
+enum tokenType currentToken;
 
-enum tokenType scan() {
-    static int currentCh = ' ';
-    static int tempCh = ' ';
-    const char* reserved[2] = { "read", "write" };
-    lexLen = 0;
-    lexeme[0] = '\0';
-    extern FILE* src;
-
-    if (feof(src)) {    //EOF indicator is set when a read operation attempts to read past the end of a file
-        return SCAN_EOF; // if end of file, return the eof mnemonic token
+void match(enum tokenType expected) {
+    if (currentToken == expected) {
+        currentToken = scan();
     }
-    while ((currentCh = fgetc(src)) != EOF) { // while current scan doesn't hit end of file
-        if (isspace(currentCh)) {    //skips whitespace characters when scanning and goes to next iteration
-            continue;
-        }
-        /*===== IDENTIFIER LEXEME CASE =====*/
-
-        else if (isalpha(currentCh) || currentCh == '_') {
-            lexeme[0] = currentCh;
-            lexLen = 1;   //at this stage, we currently have the first character of an identifier lexeme
-
-            //use temp to peek at next character, evaluate if its valid for an identifier lexeme, get next char after
-            for (tempCh = fgetc(src); isalnum(tempCh) || tempCh == '_'; tempCh = fgetc(src)) {
-                if (lexLen < 255) { //256 reserved for '\0'
-                    lexeme[lexLen] = tempCh;
-                    lexLen++;
-                }
-                else {
-                    fprintf(stderr, "Lexical error. Max lexeme length 255 reached\n");
-                    //Scan the extra characters in the lexeme without storing them to
-                    //avoid ignoring valid identifiers after an invalid size lexeme
-                    for (tempCh = fgetc(src); isalnum(tempCh) || tempCh == '_'; tempCh = fgetc(src)) {
-                        //this is empty because we just need to iterate through the lexeme
-                    }
-                }
-
-            }
-            lexeme[lexLen] = '\0'; //terminate lexeme by adding sentinel value
-            ungetc(tempCh, src);   //return the first non-ID character back to the file stream
-
-            //considering the regular expression definition for read/write is case sensitive, strcmp works
-            if (strcmp(lexeme, reserved[0]) == 0) {
-                return READ;
-            }
-            if (strcmp(lexeme, reserved[1]) == 0) {
-                return WRITE;
-            }
-            if (lexLen >= 255) {
-                return SIZE_ERROR;
-            }
-
-            return ID;
-        }
-
-        /*===== NUMBER LEXEME CASE =====*/
-        else if (isdigit(currentCh)) {
-            //BUILD LEXEME FOR THE NUMBER
-            lexeme[0] = currentCh;
-            lexLen = 1;
-            for (tempCh = fgetc(src); isdigit(tempCh); tempCh = fgetc(src)) {
-
-                if (lexLen < 255) { //256 reserved for '\0'
-                    lexeme[lexLen] = tempCh;
-                    lexLen++;
-                }
-                else {
-                    fprintf(stderr, "Lexical error. Max lexeme length 255 reached\n");
-                    //Scan the extra characters in the lexeme without storing them to
-                    //avoid ignoring valid identifiers after an invalid size lexeme
-                    for (tempCh = fgetc(src); isdigit(tempCh); tempCh = fgetc(src)) {
-                        //empty
-                    }
-                }
-            }
-            //finish fixing lexeme string, ungetc the last character read that is not a digit and then return a NUMBER
-            lexeme[lexLen] = '\0';
-            ungetc(tempCh, src);
-
-            if (lexLen >= 255) {
-                return SIZE_ERROR;
-            }
-            return NUMBER;
-        }
-
-        /*===== OPERATOR TOKEN LEXEME CASE =====*/
-        //use selection statements to look for tokens for operators and delimiters and the assignment (:=)
-
-        else if (currentCh == ':') {
-            tempCh = fgetc(src);
-            if (tempCh == '=') {
-                return ASSIGN;
-            }
-            ungetc(tempCh, src);    //unget the character before sending lexical error to avoid loss of character
-            lexical_error(currentCh); //if lexeme is a semicolon but not followed by =, then return an error for the semicolon and preserve the following character
-        }
-        else if (currentCh == '+') {
-            return PLUS;
-        }
-        else if (currentCh == '-') {
-            return MINUS;
-        }
-        else if (currentCh == '*') {
-            return TIMES;
-        }
-        else if (currentCh == '/') {
-            return DIV;
-        }
-        else if (currentCh == ';') {
-            return SEMICOLON;
-        }
-        else if (currentCh == ',') {
-            return COMMA;
-        }
-        else if (currentCh == '(') {
-            return LPAREN;
-        }
-        else if (currentCh == ')') {
-            return RPAREN;
-        }
-        /*===== INVALID INPUT CHARACTER CASE =====*/
-        else {
-            lexical_error(currentCh);
-        }
-    }
-    return SCAN_EOF;
-}
-
-void E() {
-    T();
-    while (currentToken == PLUS) {
-        scan();
-        T();
-    }
-}
-
-void T() {
-    F();
-    while (currentToken == TIMES) {
-        scan();
-        F();
-    }
-}
-
-void F() {
-    if (currentToken == ID) {
-        scan();
-    }
-    else if (currentToken == LPAREN) {
-        scan();
-        E();
-        if (currentToken == RPAREN) {
-            scan();
-        }
-        syntax_error("Missing Right Parenthesis");
-    }
-    else syntax_error("Missing Expression symbol");
-}
-
-/* global variable */
-int currentToken;
-int numberOfErrors = 0;
-
-int main(int argc, char* arv[])
-{
-    if (parse() == 0) printf("String Accepted");
     else {
-        printf("Input contains syntax errors.");
+        parse_error("Expected symbol", mnemonic[expected]);
+        exit(1);
     }
+}
 
-    /*
-    statement(currentToken){
-    //3 cases: ID, READ, WRITE
-        ID(){
-            if (nextToken == ASSIGNMENT){
-                EXPRESSION(nextToken)
-                if (nextToken != SEMICOLON); //if true continue 
-            }
+/*========== GRAMMAR RULE FUNCTION DECLARATIONS ==========*/
+void program(FILE*);
+
+void stmt_list(FILE*);
+
+void stmt(FILE*);
+
+void expr_list(FILE*);
+
+void expr_list_tail(FILE*);
+
+void id_list(FILE*);
+
+void id_list_tail(FILE*);
+
+void expression(FILE*);
+
+void term_tail(FILE*);
+
+void term(FILE*);
+
+void factor_tail(FILE*);
+
+void factor(FILE*);
+
+//void add_op(FILE * src);
+//void mult_op(FILE * src);
+
+int main(int argc, char* argv[]) {
+    extern FILE* src;
+    //enum tokenType currentToken;
+    if (argc > 1) {
+        if (fopen_s(&src, argv[1], "r")) {
+            fprintf(stderr, "Error opening source file %s", argv[1]);
+            exit(1);
         }
     }
-    
-    */
 
-
-
+    //begin process by taking in the first token of file, which should be ID, READ, WRITE, or EOF token
+    while ((currentToken = scan()) != SCAN_EOF) {
+        program(src);
+    }
+    //printf("\nParsing Complete: No Errors (WAHOOO) \n");
+    fclose(src);
     return 0;
 }
 
-int parse() {
-    scan(); 
-    E();
-    if (currentToken != SCAN_EOF) syntax_error("Unexpected end of input");
-    return numberOfErrors;
+/*=========== FUNCTION DEFINITIONS ==========*/
+void program(FILE* src) {
+    stmt_list(src);
+    //eof symbol = $ in grammar
+    if (currentToken != SCAN_EOF) {
+        printf("Expected end of input");
+    }
+    else {
+        printf("\nParsing Complete: No Errors (WAHOOO) \n");
+    }
 }
 
+void stmt_list(FILE* src) {
+    while (currentToken == ID || currentToken == READ || currentToken == WRITE) {
+        //if next token starts a statement, call stmt()
+        stmt(src);
+
+        //multiple statements can occur in a file
+        stmt_list(src);
+    }
+    //otherwise stop recursion
+
+}
+
+void stmt(FILE* src) {
+    //case 1: stmt stmt_list
+    if (currentToken == ID) {
+        match(ID);
+        match(ASSIGN);
+        expression(src);
+        match(SEMICOLON);
+    }
+
+    //case 2: epsilon. Do nothing and leave function
+    else if (currentToken == READ) {
+        match(READ);
+        match(LPAREN);
+
+        //id list handles possibility of multiple IDs
+        id_list(src);
+
+        match(RPAREN);
+        match(SEMICOLON);
+    }
+    else if (currentToken == WRITE) {
+        match(WRITE);
+        match(LPAREN);
+
+        //expr_list handles the case of multiple expressions
+        expr_list(src);
+
+        match(RPAREN);
+        match(SEMICOLON);
+    }
+    else {
+        printf("invalid statement: %s\n", mnemonic[currentToken]);
+    }
+
+}
+
+void expr_list(FILE* src) {
+    expression(src);
+
+    //expr_list_tail does nothing if no COMMA token encountered
+    expr_list_tail(src);
+}
+
+void expr_list_tail(FILE* src) {
+    if (currentToken == COMMA) {
+        match(COMMA);
+        expression(src);
+        //call recursively until comma no longer encountered. Expect RPAREN when exiting
+        expr_list_tail(src);
+    }
+}
+
+void id_list(FILE* src) {
+    match(ID);
+    //ID_list_tail does nothing if no COMMA token encountered
+    id_list_tail(src);
+}
+
+void id_list_tail(FILE* src) {
+    if (currentToken == COMMA) {
+        match(COMMA);
+        match(ID);
+        //if multiple IDs, recursively call until no more IDs. Function ends when other token encountered
+        id_list_tail(src);
+    }
+}
+
+void expression(FILE* src) {
+    term(src);
+    term_tail(src);
+}
+
+void term_tail(FILE* src) {
+    if (currentToken == PLUS) {
+        match(PLUS);
+        term(src);
+        term_tail(src);
+    }
+    else if (currentToken == MINUS) {
+        match(MINUS);
+        term(src);
+        term_tail(src);
+    }
+}
+
+void term(FILE* src) {
+    factor(src);
+    factor_tail(src);
+}
+
+void factor_tail(FILE* src) {
+    if (currentToken == TIMES ) {
+        auto temp = currentToken;
+        match(TIMES);
+        factor(src);
+        factor_tail(src);
+    }
+    else if (currentToken == DIV) {
+        auto temp = currentToken;
+        match(DIV);
+        
+        if (currentToken == SEMICOLON || currentToken == RPAREN) {
+            parse_error("Error in expression: Expected ID, NUMBER, or '(' after operator", mnemonic[temp]);
+        }
+
+        factor(src);
+        factor_tail(src);
+    }
+}
+
+void factor(FILE* src) {
+    if (currentToken == ID) {
+        match(ID);
+    }
+    if (currentToken == NUMBER) {
+        match(NUMBER);
+    }
+    else if (currentToken == LPAREN) {
+        match(LPAREN);
+        expression(src);
+        match(RPAREN);
+    }
+    else {
+       parse_error("Error in expression: Expected ID, NUMBER, or '(' . ", mnemonic[currentToken]);
+    }
+}
