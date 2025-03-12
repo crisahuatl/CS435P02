@@ -1,6 +1,6 @@
 //CS435P02: Recursive Descent Parser (with Scanner) for Simple_PL1
 //Cristopher Ahuatl
-//Arthur Peterson-Vetch
+//Arthur Peterson-Veatch
 //  Implement a Recursive Descent Parser based on the grammar for Simple_Pl1.
 //  Indicate parsing errors in output.
 
@@ -78,8 +78,9 @@ int main(int argc, char* argv[]) {
 void program(FILE* src) {
     stmt_list(src);
     //eof symbol = $ in grammar
+
     if (currentToken != SCAN_EOF) {
-        printf("Expected end of input");
+        exit(1);
     }
 
 }
@@ -91,6 +92,10 @@ void stmt_list(FILE* src) {
 
         //multiple statements can occur in a file
         stmt_list(src);
+    }
+    //in the case that an invalid statement that doesn't begin with ID, READ, or WRITE is made:
+    if (currentToken != SCAN_EOF) {
+        printf("Unexpected Symbol: %s", mnemonic[currentToken]);
     }
     //otherwise stop recursion
 
@@ -186,7 +191,7 @@ void term(FILE* src) {
 }
 
 void factor_tail(FILE* src) {
-    if (currentToken == TIMES ) {
+    if (currentToken == TIMES) {
         auto temp = currentToken;
         match(TIMES);
         factor(src);
@@ -194,7 +199,7 @@ void factor_tail(FILE* src) {
     }
     else if (currentToken == DIV) {
         match(DIV);
-        
+
         if (currentToken == SEMICOLON || currentToken == RPAREN) {
             printf("\nError in expression: Expected ID, NUMBER, or '(' . \n");
             exit(1);
