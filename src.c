@@ -4,6 +4,8 @@
 #include "scanner.h"
 
 //unsigned numErrs = 0;
+enum tokenType currentToken;
+
 /*========= PROVIDED FUNCTIONS ==========*/
 void parse_error(char* errMsg, char* lexeme) {
     //extern unsigned numErrs; //for future if error recovery used
@@ -11,7 +13,6 @@ void parse_error(char* errMsg, char* lexeme) {
     fprintf(stderr, "%s: %s\n", errMsg, lexeme);
 }
 
-enum tokenType currentToken;
 
 void match(enum tokenType expected) {
     if (currentToken == expected) {
@@ -47,9 +48,6 @@ void term(FILE*);
 void factor_tail(FILE*);
 
 void factor(FILE*);
-
-//void add_op(FILE * src);
-//void mult_op(FILE * src);
 
 int main(int argc, char* argv[]) {
     extern FILE* src;
@@ -93,7 +91,7 @@ void stmt_list(FILE* src) {
 }
 
 void stmt(FILE* src) {
-    //case 1: stmt stmt_list
+    //a statement must start with and ID, READ, or WRITE
     if (currentToken == ID) {
         match(ID);
         match(ASSIGN);
@@ -101,7 +99,6 @@ void stmt(FILE* src) {
         match(SEMICOLON);
     }
 
-    //case 2: epsilon. Do nothing and leave function
     else if (currentToken == READ) {
         match(READ);
         match(LPAREN);
@@ -190,11 +187,10 @@ void factor_tail(FILE* src) {
         factor_tail(src);
     }
     else if (currentToken == DIV) {
-        auto temp = currentToken;
         match(DIV);
         
         if (currentToken == SEMICOLON || currentToken == RPAREN) {
-            parse_error("Error in expression: Expected ID, NUMBER, or '(' . ", mnemonic[temp]);
+            fprint("\nError in expression: Expected ID, NUMBER, or '(' . \n");
             exit(1);
         }
 
@@ -215,7 +211,5 @@ void factor(FILE* src) {
         expression(src);
         match(RPAREN);
     }
-    else {
-       //parse_error("Error in expression: Expected ID, NUMBER, or '(' . ", mnemonic[currentToken]);
-    }
+
 }
