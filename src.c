@@ -196,7 +196,7 @@ void factor_tail(FILE* src) {
         match(DIV);
         
         if (currentToken == SEMICOLON || currentToken == RPAREN) {
-            fprint("\nError in expression: Expected ID, NUMBER, or '(' . \n");
+            printf("\nError in expression: Expected ID, NUMBER, or '(' . \n");
             exit(1);
         }
 
