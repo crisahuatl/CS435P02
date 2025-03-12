@@ -1,3 +1,9 @@
+//CS435P02: Recursive Descent Parser (with Scanner) for Simple_PL1
+//Cristopher Ahuatl
+//Arthur Peterson-Vetch
+//  Implement a Recursive Descent Parser based on the grammar for Simple_Pl1.
+//  Indicate parsing errors in output.
+
 #include <stdio.h>  //for c I/O
 #include <stdlib.h> //for exit()
 #include <string.h> //for strcmp
