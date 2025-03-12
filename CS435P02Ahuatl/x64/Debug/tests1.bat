@@ -1,0 +1,10 @@
+CS435P02Ahuatl ex1.txt
+CS435P02Ahuatl ex2.txt
+CS435P02Ahuatl ex3.txt
+CS435P02Ahuatl ex4.txt
+CS435P02Ahuatl ex5.txt
+CS435P02Ahuatl ex6.txt
+CS435P02Ahuatl ex7.txt
+CS435P02Ahuatl ex8.txt
+CS435P02Ahuatl ex9.txt
+CS435P02Ahuatl ex10.txt
