@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     while ((currentToken = scan()) != SCAN_EOF) {
         program(src);
     }
-    //printf("\nParsing Complete: No Errors (WAHOOO) \n");
+    printf("\nParsing Complete. No errors.\n");
     fclose(src);
     return 0;
 }
@@ -77,9 +77,7 @@ void program(FILE* src) {
     if (currentToken != SCAN_EOF) {
         printf("Expected end of input");
     }
-    else {
-        printf("\nParsing Complete: No Errors (WAHOOO) \n");
-    }
+
 }
 
 void stmt_list(FILE* src) {
@@ -196,7 +194,8 @@ void factor_tail(FILE* src) {
         match(DIV);
         
         if (currentToken == SEMICOLON || currentToken == RPAREN) {
-            parse_error("Error in expression: Expected ID, NUMBER, or '(' after operator", mnemonic[temp]);
+            parse_error("Error in expression: Expected ID, NUMBER, or '(' . ", mnemonic[temp]);
+            exit(1);
         }
 
         factor(src);
@@ -217,6 +216,6 @@ void factor(FILE* src) {
         match(RPAREN);
     }
     else {
-       parse_error("Error in expression: Expected ID, NUMBER, or '(' . ", mnemonic[currentToken]);
+       //parse_error("Error in expression: Expected ID, NUMBER, or '(' . ", mnemonic[currentToken]);
     }
 }
