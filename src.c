@@ -1,6 +1,5 @@
 //CS435P02: Recursive Descent Parser (with Scanner) for Simple_PL1
 //Cristopher Ahuatl
-//Arthur Peterson-Veatch
 //  Implement a Recursive Descent Parser based on the grammar for Simple_Pl1.
 //  Indicate parsing errors in output.
 
